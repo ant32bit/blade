@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "outDir": "dist/transpiled",
+        "sourceMap": false
+    },
+    "include": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+    ]
+}
