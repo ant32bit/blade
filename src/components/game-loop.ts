@@ -1,9 +1,6 @@
-import { IDrawContext } from "./draw-context";
+import { IDrawable, IDrawContext } from "./draw-context";
 import { IGameSettings } from "./game-settings";
-import { IInputEvent, InputState, IUpdateContext } from "./update-context";
-
-export type UpdateListener = (ctx: IUpdateContext) => void;
-export type DrawListener = (ctx: IDrawContext) => void;
+import { IInputEvent, InputState, IUpdateable, IUpdateContext } from "./update-context";
 
 export interface IInputBuffer {
     start(): void;
@@ -22,39 +19,41 @@ export class GameLoop {
     private _lastHearRate: number;
     private _stopped: boolean = true;
     private _frameFn: (callback: (heartRateTimeStamp: number) => void) => void;
-    private _updateListeners: UpdateListener[] = [];
-    private _drawListeners: DrawListener[] = [];
+    private _updateables: IUpdateable[] = [];
+    private _drawables: IDrawable[] = [];
     private _inputBuffers: IInputBuffer[] = [];
     private _renderer: IRenderer = null;
 
     constructor(windowRef: Window, gameSettings: IGameSettings) {
         if (windowRef.requestAnimationFrame) {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
-                const _callback = (heartRateTimeStamp: number) => {
+                const _doFrame = (heartRateTimeStamp: number) => {
                     const frameSpan = 1000 / gameSettings.fps;
                     if (this._lastFrameThreshold - heartRateTimeStamp >= frameSpan) {
                         this._lastFrameThreshold += frameSpan;
                         this._lastHearRate = heartRateTimeStamp;
                         callback(heartRateTimeStamp);
                     }
-                    windowRef.requestAnimationFrame(_callback);
+                    if (!this._stopped)
+                        windowRef.requestAnimationFrame(_doFrame);
                 }
-                if (!this._stopped)
-                    _callback(0);
+                
+                _doFrame(0);
             }
         } else if ((windowRef as any).webkitRequestAnimationFrame) {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
-                const _callback = (heartRateTimeStamp: number) => {
+                const _doFrame = (heartRateTimeStamp: number) => {
                     const frameSpan = 1000 / gameSettings.fps;
                     if (this._lastFrameThreshold - heartRateTimeStamp >= frameSpan) {
                         this._lastFrameThreshold += frameSpan;
                         this._lastHearRate = heartRateTimeStamp;
                         callback(heartRateTimeStamp);
                     }
-                    (windowRef as any).webkitRequestAnimationFrame(_callback);
+                    if (!this._stopped)
+                        (windowRef as any).webkitRequestAnimationFrame(_doFrame);
                 }
-                if (!this._stopped)
-                    _callback(0);
+                
+                _doFrame(0);
             }
         } else {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
@@ -87,12 +86,12 @@ export class GameLoop {
         }
     }
 
-    public addUpdateListener(listener: UpdateListener) {
-        this._updateListeners.push(listener);
+    public addUpdateable(updateable: IUpdateable) {
+        this._updateables.push(updateable);
     }
 
-    public addDrawListener(listener: DrawListener) {
-        this._drawListeners.push(listener);
+    public addDrawable(drawable: IDrawable) {
+        this._drawables.push(drawable);
     }
 
     public addInputBuffer(buffer: IInputBuffer) {
@@ -125,14 +124,14 @@ export class GameLoop {
                     }
                 }
 
-                for (const listener of this._updateListeners) {
-                    listener(updateContext);
+                for (const updateable of this._updateables) {
+                    updateable.update(updateContext);
                 }
 
                 if (this._renderer) {
                     const drawContext = this._renderer.getDrawContext();
-                    for (const listener of this._drawListeners) {
-                        listener(drawContext);
+                    for (const drawable of this._drawables) {
+                        drawable.draw(drawContext);
                     }
                 }                
             }).bind(this))

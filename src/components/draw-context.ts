@@ -5,3 +5,7 @@ export interface IDrawContext {
     isVisible(rect: Rect): boolean;
     translate(loc: Coords): Coords;
 }
+
+export interface IDrawable {
+    draw(context: IDrawContext): void;
+}

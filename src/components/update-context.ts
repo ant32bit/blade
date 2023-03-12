@@ -9,6 +9,10 @@ export interface IInputEvent {
     code: string;
     active: boolean;
     activeDurationMs: number;
-    msSinceLastUpdate: number
+    msSinceLastUpdate: number;
+}
+
+export interface IUpdateable {
+    update(context: IUpdateContext): void;
 }
 

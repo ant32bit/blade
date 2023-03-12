@@ -6,7 +6,9 @@ export class Logger {
 
     constructor() {
         const logsElement = document.getElementById('logs');
-        let logsContainer = logsElement.firstElementChild as HTMLUListElement;
+        
+        let logsContainer = logsElement.children[0] as HTMLUListElement;
+        
         
         if (!logsContainer || logsContainer.id != 'logs-container') {
             logsContainer = document.createElement("ul") as HTMLUListElement;

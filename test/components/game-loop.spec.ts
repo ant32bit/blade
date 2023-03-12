@@ -2,7 +2,7 @@ import { assert, expect } from "chai";
 import * as sinon from 'sinon';
 import { initDOM } from "../setup";
 import { sleep } from "../../src/helpers";
-import { DrawListener, GameLoop, IDrawContext, IGameSettings, IInputBuffer, InputState, IRenderer, IUpdateContext, UpdateListener } from "../../src/components";
+import { GameLoop, IDrawable, IDrawContext, IGameSettings, IInputBuffer, InputState, IRenderer, IUpdateable, IUpdateContext } from "../../src/components";
 
 
 describe("Game Loop", () => {
@@ -17,7 +17,7 @@ describe("Game Loop", () => {
             let updateCount = 0;
 
             const gl = new GameLoop(window, gameSettingsMock);
-            gl.addUpdateListener(_ => { updateCount++; });
+            gl.addUpdateable({ update(_) { updateCount++; } });
 
             gl.start();
             await sleep(runLength);
@@ -48,18 +48,20 @@ describe("Game Loop", () => {
             getState: getStateSpy
         }
 
-        const updateListener: UpdateListener = (ctx: IUpdateContext) => {
-            expect(ctx.inputs['Test']).to.not.equal(undefined);
-            expect(ctx.inputs['Test'].length).to.equal(1);
-            expect(ctx.inputs['Test'][0].code).to.equal('Test');
-            expect(ctx.inputs['Test'][0].active).to.equal(true);
-            expect(ctx.inputs['Test'][0].activeDurationMs).to.equal(100);
-            expect(ctx.inputs['Test'][0].msSinceLastUpdate).to.equal(50);
+        const updateListener: IUpdateable = {
+            update(ctx: IUpdateContext) {
+                expect(ctx.inputs['Test']).to.not.equal(undefined);
+                expect(ctx.inputs['Test'].length).to.equal(1);
+                expect(ctx.inputs['Test'][0].code).to.equal('Test');
+                expect(ctx.inputs['Test'][0].active).to.equal(true);
+                expect(ctx.inputs['Test'][0].activeDurationMs).to.equal(100);
+                expect(ctx.inputs['Test'][0].msSinceLastUpdate).to.equal(50);
+            }
         }
         
         const gl = new GameLoop(window, gameSettingsMock);
         gl.addInputBuffer(inputBuffer);
-        gl.addUpdateListener(updateListener);
+        gl.addUpdateable(updateListener);
         
         gl.start();
         await sleep(125);
@@ -114,30 +116,32 @@ describe("Game Loop", () => {
             getState: sinon.stub().returns(fakeState2)
         }
 
-        const updateListener: UpdateListener = (ctx: IUpdateContext) => {
-            expect(ctx.inputs['Test']).to.not.equal(undefined);
-            expect(ctx.inputs['Test'].length).to.equal(2);
-            expect(ctx.inputs['Test'][0].code).to.equal('Test');
-            expect(ctx.inputs['Test'][0].active).to.equal(true);
-            expect(ctx.inputs['Test'][0].activeDurationMs).to.equal(100);
-            expect(ctx.inputs['Test'][0].msSinceLastUpdate).to.equal(50);
-            expect(ctx.inputs['Test'][1].code).to.equal('Test');
-            expect(ctx.inputs['Test'][1].active).to.equal(false);
-            expect(ctx.inputs['Test'][1].activeDurationMs).to.equal(200);
-            expect(ctx.inputs['Test'][1].msSinceLastUpdate).to.equal(75);
+        const updateListener: IUpdateable = {
+            update(ctx: IUpdateContext) {
+                expect(ctx.inputs['Test']).to.not.equal(undefined);
+                expect(ctx.inputs['Test'].length).to.equal(2);
+                expect(ctx.inputs['Test'][0].code).to.equal('Test');
+                expect(ctx.inputs['Test'][0].active).to.equal(true);
+                expect(ctx.inputs['Test'][0].activeDurationMs).to.equal(100);
+                expect(ctx.inputs['Test'][0].msSinceLastUpdate).to.equal(50);
+                expect(ctx.inputs['Test'][1].code).to.equal('Test');
+                expect(ctx.inputs['Test'][1].active).to.equal(false);
+                expect(ctx.inputs['Test'][1].activeDurationMs).to.equal(200);
+                expect(ctx.inputs['Test'][1].msSinceLastUpdate).to.equal(75);
 
-            expect(ctx.inputs['Test2']).to.not.equal(undefined);
-            expect(ctx.inputs['Test2'].length).to.equal(1);
-            expect(ctx.inputs['Test2'][0].code).to.equal('Test2');
-            expect(ctx.inputs['Test2'][0].active).to.equal(true);
-            expect(ctx.inputs['Test2'][0].activeDurationMs).to.equal(300);
-            expect(ctx.inputs['Test2'][0].msSinceLastUpdate).to.equal(80);
-        }
+                expect(ctx.inputs['Test2']).to.not.equal(undefined);
+                expect(ctx.inputs['Test2'].length).to.equal(1);
+                expect(ctx.inputs['Test2'][0].code).to.equal('Test2');
+                expect(ctx.inputs['Test2'][0].active).to.equal(true);
+                expect(ctx.inputs['Test2'][0].activeDurationMs).to.equal(300);
+                expect(ctx.inputs['Test2'][0].msSinceLastUpdate).to.equal(80);
+            }
+        };
         
         const gl = new GameLoop(window, gameSettingsMock);
         gl.addInputBuffer(inputBuffer1);
         gl.addInputBuffer(inputBuffer2);
-        gl.addUpdateListener(updateListener);
+        gl.addUpdateable(updateListener);
         
         gl.start();
         await sleep(125);
@@ -154,13 +158,15 @@ describe("Game Loop", () => {
         const getDrawContextSpy = sinon.spy(() => fakeDrawContext);
         const renderer: IRenderer = { getDrawContext: getDrawContextSpy };
 
-        const drawListener: DrawListener = (ctx: IDrawContext) => {
-            expect(ctx).to.equal(fakeDrawContext);
+        const drawable: IDrawable = {
+            draw(ctx: IDrawContext) {
+                expect(ctx).to.equal(fakeDrawContext);
+            }
         };
         
         const gl = new GameLoop(window, gameSettingsMock);
         gl.setRenderer(renderer);
-        gl.addDrawListener(drawListener);
+        gl.addDrawable(drawable);
         
         gl.start();
         await sleep(125);

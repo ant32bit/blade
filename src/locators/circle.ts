@@ -25,7 +25,7 @@ export class Circle {
         return this.centre.distance(circle.centre) <= this.radius + circle.radius;
     }
 
-    collidesWith(rect: Rect, debug: boolean = false): boolean {
+    collidesWith(rect: Rect): boolean {
         if (this.centre.within(rect)) { 
             return true; 
         }
