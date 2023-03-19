@@ -1,4 +1,4 @@
-import { ISettingsProvider } from './env-settings-provider';
+import { ISettingsProvider } from '../env-settings-provider';
 
 export interface IGameSettings {
     debug: boolean;

@@ -1,12 +1,12 @@
 import { assert, expect } from "chai";
 import { initDOM } from "../setup";
-import { Logger } from "../../src/components";
+import { Logger, LogLevel } from "../../src/components";
 
 describe("Logger", () => {
     beforeEach(initDOM);
 
     it("should create a log container", () => {
-        const logger = new Logger();
+        const logger = new Logger(document);
         
         assert.isNotNull(logger);
 
@@ -25,22 +25,22 @@ describe("Logger", () => {
         logsContainerEl.id = 'logs-container';
         logsEl.appendChild(logsContainerEl);
 
-        const logger = new Logger();
+        const logger = new Logger(document);
 
         assert.isNotNull(logsContainerEl);
 
         const logMessageText = "test";
-        logger.log(logMessageText);
+        logger.log(LogLevel.info, logMessageText);
         
         const log = logsContainerEl.firstElementChild as HTMLLIElement;
         expect(log.innerHTML).to.equal(logMessageText);
     });
 
     it("should log a log", () => {
-        const logger = new Logger();
+        const logger = new Logger(document);
         const logMessageText = "test";
 
-        logger.log(logMessageText);
+        logger.log(LogLevel.info, logMessageText);
 
         const logsEl = document.getElementById("logs");
         const logsContainerEl = logsEl.firstElementChild;

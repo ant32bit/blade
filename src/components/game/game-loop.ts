@@ -1,6 +1,6 @@
-import { IDrawable, IDrawContext } from "./draw-context";
+import { IDrawable, IDrawContext } from "../contexts/draw-context";
 import { IGameSettings } from "./game-settings";
-import { IInputEvent, InputState, IUpdateable, IUpdateContext } from "./update-context";
+import { IInputEvent, InputState, IUpdateable, IUpdateContext } from "../contexts/update-context";
 
 export interface IInputBuffer {
     start(): void;
@@ -15,8 +15,9 @@ export interface IRenderer {
 
 export class GameLoop {
 
-    private _lastFrameThreshold: number;
-    private _lastHearRate: number;
+    private _frameThreshold: number;
+    private _lastFrameHeartRate: number;
+    private _lastTotalFramesUpdate: number;
     private _stopped: boolean = true;
     private _frameFn: (callback: (heartRateTimeStamp: number) => void) => void;
     private _updateables: IUpdateable[] = [];
@@ -29,31 +30,22 @@ export class GameLoop {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
                 const _doFrame = (heartRateTimeStamp: number) => {
                     const frameSpan = 1000 / gameSettings.fps;
-                    if (this._lastFrameThreshold - heartRateTimeStamp >= frameSpan) {
-                        this._lastFrameThreshold += frameSpan;
-                        this._lastHearRate = heartRateTimeStamp;
+                    if (this._lastFrameHeartRate < 0) {
+                        this._frameThreshold = frameSpan;
+                        this._lastFrameHeartRate = heartRateTimeStamp;
+                    }
+                    if (heartRateTimeStamp - this._frameThreshold >= 0) {
+                        this._lastTotalFramesUpdate = (heartRateTimeStamp - this._lastFrameHeartRate) / frameSpan;
+                        this._frameThreshold += frameSpan;
                         callback(heartRateTimeStamp);
+                        this._lastFrameHeartRate = heartRateTimeStamp;
                     }
                     if (!this._stopped)
                         windowRef.requestAnimationFrame(_doFrame);
                 }
                 
-                _doFrame(0);
-            }
-        } else if ((windowRef as any).webkitRequestAnimationFrame) {
-            this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
-                const _doFrame = (heartRateTimeStamp: number) => {
-                    const frameSpan = 1000 / gameSettings.fps;
-                    if (this._lastFrameThreshold - heartRateTimeStamp >= frameSpan) {
-                        this._lastFrameThreshold += frameSpan;
-                        this._lastHearRate = heartRateTimeStamp;
-                        callback(heartRateTimeStamp);
-                    }
-                    if (!this._stopped)
-                        (windowRef as any).webkitRequestAnimationFrame(_doFrame);
-                }
-                
-                _doFrame(0);
+                if (!this._stopped)
+                    windowRef.requestAnimationFrame(_doFrame);
             }
         } else {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
@@ -75,10 +67,10 @@ export class GameLoop {
                         return;
                     }
 
-                    this._lastHearRate = Date.now();
-                    this._lastFrameThreshold += 1000 / gameSettings.fps;
+                    this._lastFrameHeartRate = Date.now();
+                    this._frameThreshold += 1000 / gameSettings.fps;
 
-                    callback(this._lastHearRate);
+                    callback(this._lastFrameHeartRate);
                 };
 
                 intervalFn();
@@ -107,12 +99,15 @@ export class GameLoop {
     public start(): void {
         if (this._stopped) {
             this._stopped = false;
-            this._lastHearRate = Date.now();
-            this._lastFrameThreshold = this._lastHearRate;
+            this._lastFrameHeartRate = -1;
+            this._frameThreshold = -1;
             
             this._frameFn(((hrts: number) => {
                 const updateContext: IUpdateContext = {
-                    inputs: {}
+                    inputs: {},
+                    framesSinceLastUpdate: Math.round(this._lastTotalFramesUpdate),
+                    lastUpdateTime: this._lastFrameHeartRate,
+                    currUpdateTime: hrts
                 }
 
                 for (const buffer of this._inputBuffers) {
@@ -141,6 +136,7 @@ export class GameLoop {
     }
 
     public stop(): void {
+        this._inputBuffers.forEach(buffer => { buffer.stop(); });
         this._stopped = true;
     }
 }

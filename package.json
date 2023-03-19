@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "mocha dist/transpiled/test/**/*.js",
-    "build": "tsc && webpack && python3 integrate.py && mocha dist/transpiled/test/**/*.js"
+    "build": "tsc && webpack && python3 integrate.py && mocha dist/transpiled/test/**/*.js",
+    "serve": "python3 -m http.server --directory dist/www-root 4600"
   },
   "keywords": [],
   "author": "",

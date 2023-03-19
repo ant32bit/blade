@@ -1,14 +1,14 @@
 import { assert, expect } from 'chai';
 import * as setup from '../setup';
 import { sleep } from '../../src/helpers';
-import { KeyInputBuffer } from '../../src/components';
+import { KeyInputBuffer, NullLogger } from '../../src/components';
 
 describe("Key Input Buffer", () => {
     beforeEach(setup.initDOM);
 
     it('can connect to a key listener', async () => {
         const element = document.getElementById('viewport');
-        const buffer = new KeyInputBuffer(element);
+        const buffer = new KeyInputBuffer(element, new NullLogger());
         buffer.start();
 
         const downEvent = new Event('keydown');
@@ -37,7 +37,7 @@ describe("Key Input Buffer", () => {
 
     it('deletes finished events after an update', async () => {
         const element = document.getElementById('viewport');
-        const buffer = new KeyInputBuffer(element);
+        const buffer = new KeyInputBuffer(element, new NullLogger());
         buffer.start();
 
         const downAEvent = new Event('keydown');

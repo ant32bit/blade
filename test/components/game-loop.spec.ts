@@ -151,9 +151,9 @@ describe("Game Loop", () => {
     it("uses renderer to create a draw context", async () => {
         const gameSettingsMock: IGameSettings = { fps: 8, debug: false }
         const fakeDrawContext: IDrawContext = {
-            context: null,
-            isVisible: (rect) => true,
-            translate: (loc) => loc
+            translate: (loc) => loc,
+            fill: null,
+            drawAnimationFrame: null
         };
         const getDrawContextSpy = sinon.spy(() => fakeDrawContext);
         const renderer: IRenderer = { getDrawContext: getDrawContextSpy };

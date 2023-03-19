@@ -1,19 +1,26 @@
-import { IInputBuffer } from "./game-loop";
-import { IInputEvent, InputState } from "./update-context";
+import { IInputBuffer } from "../game-loop";
+import { IInputEvent, InputState } from "../../contexts/update-context";
+import { ILogger, LogLevel } from "../../logger";
+
+export interface IKeyEventListenable {
+    addEventListener(type: 'keyup'|'keydown', listener: (event: KeyboardEvent) => void);
+    removeEventListener(type: 'keyup'|'keydown', listener: (event: KeyboardEvent) => void);
+}
 
 export class KeyInputBuffer implements IInputBuffer {
 
     private _started: boolean;
-    private _element: HTMLElement;
+    private _element: IKeyEventListenable;
     private _keydownHandler: (ev: KeyboardEvent) => void;
     private _keyupHandler: (ev: KeyboardEvent) => void;
 
     private _keyEventBuffer: IKeyEvent[];
     private _keyEventActiveIndex: {[code: string]: IKeyEvent};
 
-    constructor(element: HTMLElement) {
+    constructor(element: IKeyEventListenable, private logger: ILogger) {
         this._element = element;
         this._keydownHandler = (event: KeyboardEvent) => {
+            this.logger.log(LogLevel.info, "Input Event: keydown " + event.code);
             if (!this._keyEventActiveIndex[event.code]) {
                 const keyEvent: IKeyEvent = {
                     code: event.code,
@@ -27,6 +34,7 @@ export class KeyInputBuffer implements IInputBuffer {
         };
         
         this._keyupHandler = (event: KeyboardEvent) => {
+            this.logger.log(LogLevel.info, "Input Event: keyup " + event.code);
             if (this._keyEventActiveIndex[event.code]) {
                 this._keyEventActiveIndex[event.code].endTimestamp = event.timeStamp;
                 delete this._keyEventActiveIndex[event.code];
@@ -39,6 +47,7 @@ export class KeyInputBuffer implements IInputBuffer {
 
     public start() {
         if (!this._started) {
+            this.logger.log(LogLevel.info, "Input Buffer Started");
             this.clear();
             this._element.addEventListener('keydown', this._keydownHandler);
             this._element.addEventListener('keyup', this._keyupHandler);
@@ -48,6 +57,7 @@ export class KeyInputBuffer implements IInputBuffer {
 
     public stop() {
         if (this._started) {
+            this.logger.log(LogLevel.info, "Input Buffer Stopped");
             this._element.removeEventListener('keydown', this._keydownHandler);
             this._element.removeEventListener('keyup', this._keyupHandler);
             this._started = false;
