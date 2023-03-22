@@ -15,43 +15,32 @@ export class TestGirl implements IUpdateable, IDrawable {
 
     constructor(private settings: IGameSettings, private spriteLibrary: ISpriteLibrary) {
         this.position = new Coords(0, 0);
-        this._setStateAndDirection('idle', 'r');
+        this._setState(new NewState('none', 'r', []));
     }
 
     update(context: IUpdateContext): void {
-        //console.log(context);
-        let modifier = 0;
-        let newState = this.state;
-        let newDirection = this.direction;
-        const a = context.inputs['KeyA'];
-        const d = context.inputs['KeyD'];
-        if (!a && !d) {
-            newState = 'idle';
-        }
-        else if (d) {
-            const l = d[d.length - 1];
-            newDirection = 'r';
-            newState = l.active ? 'walk' : 'idle';
-        }
-        else if (a) {
-            const l = a[a.length - 1];
-            newDirection = 'l';
-            newState = l.active ? 'walk' : 'idle';
-        }
+        let frameCountModifier = 0
 
-        if (this.state == 'walk') {
-            let t = 3;
+        if (!this.state.startsWith('attack') || this.currAnimationCounter.finished()) {
+            if(this.currAnimationCounter.finished())
+                this.state = 'none';
+
+            const newState = new NewState(this.state, this.direction, context.state);
+
+            if (newState.changed) {
+                this._setState(newState);
+                frameCountModifier = -1;
+            }
+            
+            let t = 0;
+            if (this.state == 'walk') t = 3;
+            if (this.state == 'run') t = 10;
             t *= context.framesSinceLastUpdate;
             t *= this.direction == 'r' ? 1 : -1;
             this.position = this.position.move(t, 0);
         }
 
-        if (newState != this.state || newDirection != this.direction) {
-            this._setStateAndDirection(newState, newDirection);
-            modifier = -1;
-        }
-
-        this.currAnimationCounter.next(context.framesSinceLastUpdate + modifier);
+        this.currAnimationCounter.next(context.framesSinceLastUpdate + frameCountModifier);
         this.currFrame = Math.floor(this.currAnimationCounter.value());
     }
 
@@ -60,22 +49,81 @@ export class TestGirl implements IUpdateable, IDrawable {
         context.drawAnimationFrame(screenCoords, this.currAnimation, this.currFrame);
     }
 
-    private _setStateAndDirection(newState: string, newDirection: string) {
-        if (this.state == newState && this.direction == newDirection)
+    private _setState(newState: NewState) {
+        if (!newState.changed)
             return;
 
-        this.state = newState;
-        this.direction = newDirection;
+        this.state = newState.state;
+        this.direction = newState.direction;
 
-        const spritesheetName = newDirection == 'r' ? 'testgirl' : 'testgirl-mirror';
+        const spritesheetName = this.direction == 'r' ? 'testgirl' : 'testgirl-mirror';
 
-        this.currAnimation = this.spriteLibrary.getAnimation(spritesheetName, newState);
+        this.currAnimation = this.spriteLibrary.getAnimation(spritesheetName, this.state);
 
         const length = this.currAnimation.frames.length;
 
         const step = (length * 1000) / (this.currAnimation.duration * this.settings.fps);
 
-        this.currAnimationCounter = new CountAnimator(0, length, step, true);
+        this.currAnimationCounter = new CountAnimator(0, length, step, !this.state.startsWith('attack'));
         this.currFrame = 0;
+    }
+}
+
+class NewState {
+    private _direction: string;
+    private _state: string;
+    private _changed: boolean;
+
+    public get direction(): string { return this._direction; }
+    public get state(): string { return this._state; }
+    public get changed(): boolean { return this._changed; }
+
+    constructor(state: string, direction: string, stateFromContext: string[]) {
+        let fast = false;
+        let newState = null;
+        let newDirection = null;
+        for(const s of stateFromContext) {
+            switch (s) {
+                case 'left':
+                    if (!newState)
+                        newState = 'move';
+                    if (!newDirection)
+                        newDirection = 'l';
+                    break;
+                case 'right':
+                    if (!newState)
+                        newState = 'move';
+                    if (!newDirection)
+                        newDirection = 'r';
+                    break;
+                case 'run':
+                    fast = true;
+                    break;
+                case 'punch':
+                    if (!newState)
+                        newState = 'punch';
+                    break;
+                case 'kick':
+                    if (!newState)
+                        newState = 'kick';
+                    break;
+            }
+        }
+
+        this._direction = newDirection || direction;
+        switch (newState) {
+            case null:
+                this._state = 'idle';
+                break;
+            case 'move':
+                this._state = fast ? 'run' : 'walk';
+                break;
+            case 'punch':
+            case 'kick':
+                this._state = 'attack-' + newState;
+                break;
+        }
+
+        this._changed = state != this._state || direction != this._direction;
     }
 }

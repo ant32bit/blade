@@ -48,3 +48,18 @@ body, #viewport
     background: aliceblue;
     margin: 2px 0;
 }
+
+.log.level-warn {
+    border-color: darkgoldenrod;
+    background-color: goldenrod;
+}
+
+.log.level-error {
+    border-color: crimson;
+    background-color: tomato;
+}
+
+.log.level-fatal {
+    border-color: darkorchid;
+    background-color: orchid;
+}

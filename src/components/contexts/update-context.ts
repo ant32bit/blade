@@ -1,6 +1,7 @@
 
 export interface IUpdateContext {
     inputs: InputState;
+    state: string[];
     framesSinceLastUpdate: number;
     lastUpdateTime: number;
     currUpdateTime: number;

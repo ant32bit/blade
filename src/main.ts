@@ -1,3 +1,4 @@
+import { InputMapper } from "./abstractions";
 import { EnvSettingsProvider, GameLoop, GameSettings, ISpriteLibrary, KeyInputBuffer, Logger, NullLogger, SpriteLibrary, Viewport } from "./components";
 import { testgirlSpritesheetMetadata } from "./data";
 import { ImageLoader, sleep } from "./helpers";
@@ -24,6 +25,16 @@ async function initEngine() {
     const keyboardBuffer = new KeyInputBuffer(window, nullLogger);
     gameLoop.addInputBuffer(keyboardBuffer);
 
+    const inputMapper = new InputMapper({
+        'KeyA':       { action: 'left' },
+        'ArrowLeft':  { action: 'left' },
+        'KeyD':       { action: 'right' },
+        'ArrowRight': { action: 'right' },
+        'ShiftLeft':  { action: 'run' },
+        'KeyQ':       { action: 'punch', falloff: 700 },
+        'KeyE':       { action: 'kick', falloff: 700 }
+    });
+    gameLoop.inputMapper = inputMapper;
     
     const spriteLibrary = new SpriteLibrary();
     await loadSpritesheets(spriteLibrary)

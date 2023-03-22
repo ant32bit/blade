@@ -1,6 +1,7 @@
 import { IDrawable, IDrawContext } from "../contexts/draw-context";
 import { IGameSettings } from "./game-settings";
 import { IInputEvent, InputState, IUpdateable, IUpdateContext } from "../contexts/update-context";
+import { IInputMapper } from "../../abstractions";
 
 export interface IInputBuffer {
     start(): void;
@@ -11,6 +12,12 @@ export interface IInputBuffer {
 
 export interface IRenderer {
     getDrawContext(): IDrawContext;
+}
+
+export interface IIntervalProvider {
+    requestAnimationFrame?: (callback: (hrts: number) => void) => void;
+    setInterval(callback: () => void, intervalMs: number): number;
+    clearInterval(intervalId: number): void;
 }
 
 export class GameLoop {
@@ -25,7 +32,7 @@ export class GameLoop {
     private _inputBuffers: IInputBuffer[] = [];
     private _renderer: IRenderer = null;
 
-    constructor(windowRef: Window, gameSettings: IGameSettings) {
+    constructor(windowRef: IIntervalProvider, gameSettings: IGameSettings, public inputMapper: IInputMapper = null) {
         if (windowRef.requestAnimationFrame) {
             this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
                 const _doFrame = (heartRateTimeStamp: number) => {
@@ -105,6 +112,7 @@ export class GameLoop {
             this._frameFn(((hrts: number) => {
                 const updateContext: IUpdateContext = {
                     inputs: {},
+                    state: [],
                     framesSinceLastUpdate: Math.round(this._lastTotalFramesUpdate),
                     lastUpdateTime: this._lastFrameHeartRate,
                     currUpdateTime: hrts
@@ -117,6 +125,10 @@ export class GameLoop {
                             updateContext.inputs[key] = [];
                         updateContext.inputs[key].push(...state[key])
                     }
+                }
+
+                if (this.inputMapper) {
+                    updateContext.state = this.inputMapper.map(updateContext.inputs);
                 }
 
                 for (const updateable of this._updateables) {

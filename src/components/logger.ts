@@ -1,3 +1,4 @@
+import { IElementProvider } from "../models";
 
 export interface ILogger {
     log(level: LogLevel, message: string): void;
@@ -14,26 +15,25 @@ export enum LogLevel {
 
 export class Logger implements ILogger {
     public static MaxLogs: number = 100;
+    private static LevelClass: string[] = ["level-undefined", "level-trace", "level-debug", "level-info", "level-warn", "level-error", "level-fatal"];
     
-    private _document: Document;
-    private logsWindow: HTMLDivElement = null;
+    private logWindow: HTMLDivElement = null;
     private logContainer: HTMLUListElement = null;
 
-    constructor(docRef: Document) {
-        this._document = docRef;
-        const logsElement = this._document.getElementById('logs');
+    constructor(private elementProvider: IElementProvider) {
+        const logsElement = this.elementProvider.getElementById('logs');
         
-        let logsContainer = logsElement.children[0] as HTMLUListElement;
+        let logContainer = logsElement.children[0] as HTMLUListElement;
         
         
-        if (!logsContainer || logsContainer.id != 'logs-container') {
-            logsContainer = this._document.createElement("ul") as HTMLUListElement;
-            logsContainer.id = 'logs-container';
-            logsElement.appendChild(logsContainer);
+        if (!logContainer || logContainer.id != 'logs-container') {
+            logContainer = this.elementProvider.createElement("ul") as HTMLUListElement;
+            logContainer.id = 'logs-container';
+            logsElement.appendChild(logContainer);
         }
 
-        this.logsWindow = logsElement as HTMLDivElement;
-        this.logContainer = logsContainer;
+        this.logWindow = logsElement as HTMLDivElement;
+        this.logContainer = logContainer;
     }
 
     public log(level: LogLevel, message: string): void {
@@ -43,12 +43,12 @@ export class Logger implements ILogger {
             this.logContainer.removeChild(earliest);
         }
 
-        const logMessage = this._document.createTextNode(message);
-        const log = this._document.createElement("li");
-        log.classList.add("log");
+        const logMessage = this.elementProvider.createTextNode(message);
+        const log = this.elementProvider.createElement("li");
+        log.classList.add("log", Logger.LevelClass[level]);
         log.appendChild(logMessage);
         this.logContainer.appendChild(log);
-        this.logsWindow.scrollTop = this.logsWindow.scrollHeight;
+        this.logWindow.scrollTop = this.logWindow.scrollHeight;
     }
 }
 

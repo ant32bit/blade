@@ -1,5 +1,5 @@
 import { Coords, Rect } from "../../locators";
-import { IAnimation } from "../../models";
+import { IAnimation, IDeviceSettings } from "../../models";
 
 export interface IDrawable {
     draw(context: IDrawContext): void;
@@ -19,9 +19,9 @@ export class DrawContext implements IDrawContext {
     private _height: number;
     private _ratio: number;
 
-    constructor(windowRef: Window, canvasRef: HTMLCanvasElement) {
+    constructor(deviceSettings: IDeviceSettings, canvasRef: HTMLCanvasElement) {
 
-        this._ratio = windowRef.devicePixelRatio;
+        this._ratio = deviceSettings.devicePixelRatio;
         this._width = canvasRef.clientWidth / this._ratio;
         this._height = canvasRef.clientHeight / this._ratio;
         this._midX = Math.round(this._width / 2);

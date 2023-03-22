@@ -1,23 +1,19 @@
 import { IInputBuffer } from "../game-loop";
 import { IInputEvent, InputState } from "../../contexts/update-context";
 import { ILogger, LogLevel } from "../../logger";
-
-export interface IKeyEventListenable {
-    addEventListener(type: 'keyup'|'keydown', listener: (event: KeyboardEvent) => void);
-    removeEventListener(type: 'keyup'|'keydown', listener: (event: KeyboardEvent) => void);
-}
+import { IKeyEventDispatcher } from "../../../models";
 
 export class KeyInputBuffer implements IInputBuffer {
 
     private _started: boolean;
-    private _element: IKeyEventListenable;
+    private _element: IKeyEventDispatcher;
     private _keydownHandler: (ev: KeyboardEvent) => void;
     private _keyupHandler: (ev: KeyboardEvent) => void;
 
     private _keyEventBuffer: IKeyEvent[];
     private _keyEventActiveIndex: {[code: string]: IKeyEvent};
 
-    constructor(element: IKeyEventListenable, private logger: ILogger) {
+    constructor(element: IKeyEventDispatcher, private logger: ILogger) {
         this._element = element;
         this._keydownHandler = (event: KeyboardEvent) => {
             this.logger.log(LogLevel.info, "Input Event: keydown " + event.code);

@@ -1,5 +1,6 @@
 import { IImageLoader } from "../helpers";
 import { IAnimation } from "./animation";
+import { IElementProvider } from "./descriptors/element-provider";
 import { ISpritesheet, Spritesheet } from "./spritesheet";
 
 export interface ISpritesheetMetadata
@@ -26,14 +27,14 @@ export class LinkedSpritesheet implements ISpritesheet {
     private _error: string;
     private _image: HTMLImageElement;
 
-    constructor(private documentRef: Document, private imageLoader: IImageLoader, private metadata: ISpritesheetMetadata) {
+    constructor(private elementProvider: IElementProvider, private imageLoader: IImageLoader, private metadata: ISpritesheetMetadata) {
         this.animations = {};
         this.registerPromises = [];
         this._loaded = false;
         this._error = null;
 
         let href: string;
-        const links = documentRef.getElementsByTagName('link');
+        const links = elementProvider.getElementsByTagName('link');
         for (const link of links) {
             if (link.rel == 'spritesheet' && link.title == this.metadata.title)
             {
@@ -107,7 +108,7 @@ export class LinkedSpritesheet implements ISpritesheet {
 
     public async createMirror(): Promise<ISpritesheet> {
         await this.load();
-        const canvas = this.documentRef.createElement('canvas');
+        const canvas = this.elementProvider.createElement('canvas');
         canvas.width = this._image.naturalWidth;
         canvas.height = this._image.naturalHeight;
         const context = canvas.getContext("2d");
