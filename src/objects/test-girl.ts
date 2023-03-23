@@ -19,29 +19,33 @@ export class TestGirl implements IUpdateable, IDrawable {
     }
 
     update(context: IUpdateContext): void {
-        let frameCountModifier = 0
+        for(let i = 0; i < context.framesSinceLastUpdate; i++) {
+            this.currAnimationCounter.next(context.framesSinceLastUpdate);
+            let deltaX = 0;
 
-        if (!this.state.startsWith('attack') || this.currAnimationCounter.finished()) {
-            if(this.currAnimationCounter.finished())
-                this.state = 'none';
+            if (!this.state.startsWith('attack') || this.currAnimationCounter.finished()) {
+                if(this.currAnimationCounter.finished())
+                    this.state = 'none';
 
-            const newState = new NewState(this.state, this.direction, context.state);
+                const newState = new NewState(this.state, this.direction, context.state);
 
-            if (newState.changed) {
-                this._setState(newState);
-                frameCountModifier = -1;
+                if (newState.changed)
+                    this._setState(newState);
+
+                if (this.state == 'walk') deltaX = 3;
+                if (this.state == 'run') deltaX = 15;
+                deltaX *= this.direction == 'r' ? 1 : -1;
             }
-            
-            let t = 0;
-            if (this.state == 'walk') t = 3;
-            if (this.state == 'run') t = 10;
-            t *= context.framesSinceLastUpdate;
-            t *= this.direction == 'r' ? 1 : -1;
-            this.position = this.position.move(t, 0);
-        }
 
-        this.currAnimationCounter.next(context.framesSinceLastUpdate + frameCountModifier);
-        this.currFrame = Math.floor(this.currAnimationCounter.value());
+            const prevFrame = this.currFrame;
+            this.currFrame = Math.floor(this.currAnimationCounter.value());
+
+            let frameDelta = this.currFrame - prevFrame;
+            if (prevFrame > this.currFrame) 
+                frameDelta += this.currAnimation.frames.length;
+
+            this.position = this.position.move(deltaX * frameDelta, 0);
+        }
     }
 
     draw(context: IDrawContext): void {
