@@ -7,7 +7,7 @@ describe("Game Settings", () => {
         
         const expectedValue = true;
         const providerGetStub = sinon.stub().withArgs('debug').returns(expectedValue);
-        const settingsProviderStub: ISettingsProvider = { Get: providerGetStub };
+        const settingsProviderStub: ISettingsProvider = { get: providerGetStub };
         
         const gameSettings = new GameSettings(settingsProviderStub);
 
@@ -20,7 +20,7 @@ describe("Game Settings", () => {
         
         const expectedValue = 10;
         const providerGetStub = sinon.stub().withArgs('fps').returns(expectedValue);
-        const settingsProviderStub: ISettingsProvider = { Get: providerGetStub };
+        const settingsProviderStub: ISettingsProvider = { get: providerGetStub };
         
         const gameSettings = new GameSettings(settingsProviderStub);
 

@@ -1,12 +1,12 @@
 import { assert, expect } from "chai";
 import * as setup from "../setup";
-import { Viewport } from "../../src/components";
+import { Renderer2D } from "../../src/components";
 
 describe("Viewport", () => {
     beforeEach(setup.initDOM)
 
     it("connects to the canvas element", () => {
-        const viewport = new Viewport(document, window);
+        const viewport = new Renderer2D(document, window);
         const canvas = viewport.canvas;
 
         assert.isNotNull(canvas);
@@ -15,7 +15,7 @@ describe("Viewport", () => {
     });
 
     it("can get the visible rectangle", () => {
-        const viewport = new Viewport(document, window);
+        const viewport = new Renderer2D(document, window);
         setup.setClientDimensions(viewport.canvas, 1024, 768);
         setup.setClientPixelDensity(window, 1);
         
@@ -29,7 +29,7 @@ describe("Viewport", () => {
     });
 
     it("can get a context", () => {
-        const viewport = new Viewport(document, window);
+        const viewport = new Renderer2D(document, window);
         setup.setCanvasContext(viewport.canvas);
         setup.setClientDimensions(viewport.canvas, 1024, 768);
         setup.setClientPixelDensity(window, 1);

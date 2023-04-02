@@ -17,7 +17,6 @@ export class World implements IUpdateable, IDrawable {
     }
 
     draw(context: IDrawContext): void {
-        context.fill('#000000');
         this.drawables.forEach(d => d.draw(context));
     }
 }

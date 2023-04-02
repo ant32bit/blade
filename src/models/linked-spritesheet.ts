@@ -1,4 +1,4 @@
-import { IImageLoader } from "../helpers";
+import { IImageLoader, getLink } from "../helpers";
 import { IAnimation } from "./animation";
 import { IElementProvider } from "./descriptors/element-provider";
 import { ISpritesheet, Spritesheet } from "./spritesheet";
@@ -33,15 +33,7 @@ export class LinkedSpritesheet implements ISpritesheet {
         this._loaded = false;
         this._error = null;
 
-        let href: string;
-        const links = elementProvider.getElementsByTagName('link');
-        for (const link of links) {
-            if (link.rel == 'spritesheet' && link.title == this.metadata.title)
-            {
-                href = link.href;
-                break;
-            }
-        }
+        let href: string = getLink(elementProvider, 'spritesheet', this.metadata.title);
         imageLoader
             .load(href)
             .then((image => {

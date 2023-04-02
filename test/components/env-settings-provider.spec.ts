@@ -6,23 +6,23 @@ describe("Env Settings Provider", () => {
         const envSettingsProvider = new EnvSettingsProvider();
 
         assert.isNotNull(envSettingsProvider);
-        expect(envSettingsProvider.Get('debug')).to.equal(false);
-        expect(envSettingsProvider.Get('fps')).to.equal(8);
+        expect(envSettingsProvider.get('debug')).to.equal(false);
+        expect(envSettingsProvider.get('fps')).to.equal(8);
     });
 
     it("reads settings from search params", () => {
         const searchParams = new URLSearchParams("debug=true&fps=16");
         const envSettingsProvider = new EnvSettingsProvider();
-        envSettingsProvider.UseSearchParams(searchParams);
+        envSettingsProvider.useSearchParams(searchParams);
 
-        expect(envSettingsProvider.Get('debug')).to.equal(true);
-        expect(envSettingsProvider.Get('fps')).to.equal(16);
+        expect(envSettingsProvider.get('debug')).to.equal(true);
+        expect(envSettingsProvider.get('fps')).to.equal(16);
     });
 
     it("can synchronsize to a window object", () => {
         const window: any = {};
         const envSettingsProvider = new EnvSettingsProvider();
-        envSettingsProvider.ConnectToWindow(window);
+        envSettingsProvider.connectToWindow(window);
 
         expect(window.settings.debug).to.equal(false);
         expect(window.settings.fps).to.equal(8);
@@ -30,8 +30,8 @@ describe("Env Settings Provider", () => {
         window.settings.debug = true;
         window.settings.fps = 16;
 
-        expect(envSettingsProvider.Get('debug')).to.equal(true);
-        expect(envSettingsProvider.Get('fps')).to.equal(16);
+        expect(envSettingsProvider.get('debug')).to.equal(true);
+        expect(envSettingsProvider.get('fps')).to.equal(16);
     });
 
     [
@@ -45,10 +45,10 @@ describe("Env Settings Provider", () => {
         it(`can translate ${value} to ${expected} for debug`, () => {
             const window: any = {};
             const envSettingsProvider = new EnvSettingsProvider();
-            envSettingsProvider.ConnectToWindow(window);
+            envSettingsProvider.connectToWindow(window);
     
             window.settings.debug = value;
-            expect(envSettingsProvider.Get('debug')).to.equal(expected);
+            expect(envSettingsProvider.get('debug')).to.equal(expected);
         });
     });
 
@@ -61,10 +61,10 @@ describe("Env Settings Provider", () => {
         it(`can translate ${value} to ${expected} for fps`, () => {
             const window: any = {};
             const envSettingsProvider = new EnvSettingsProvider();
-            envSettingsProvider.ConnectToWindow(window);
+            envSettingsProvider.connectToWindow(window);
     
             window.settings.fps = value;
-            expect(envSettingsProvider.Get('fps')).to.equal(expected);
+            expect(envSettingsProvider.get('fps')).to.equal(expected);
         });
     });
 })

@@ -1,10 +1,10 @@
 import { Rect } from "../../locators";
 import { IDeviceSettings, IElementProvider } from "../../models";
 import { IDrawContext, DrawContext } from "../contexts/draw-context";
-import { IRenderer } from "./game-loop";
+import { IRenderer2D } from "./game-loop";
 
 
-export class Viewport implements IRenderer {
+export class Renderer2D implements IRenderer2D {
 
     private _canvas: HTMLCanvasElement = null;
 

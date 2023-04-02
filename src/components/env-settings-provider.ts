@@ -146,13 +146,15 @@ class NumberSetting implements ISetting {
 }
 
 export interface ISettingsProvider {
-    Get(settingName: string): any;
+    get(settingName: string): any;
 }
 
 export class EnvSettingsProvider implements ISettingsProvider {
     private settings: {[key: string]: ISetting} = {
         'debug': new BooleanSetting('debug', false),
         'fps': new NumberSetting('fps', 8, 4, 60),
+        'pixelspermeter': new NumberSetting('pixelspermeter', 32, 8, 128),
+        'renderpass': new NumberSetting('renderpass', 5, 1, 5)
     };
 
     private connectedSettings: {[key: string]: string} = null;
@@ -161,14 +163,14 @@ export class EnvSettingsProvider implements ISettingsProvider {
 
     }
 
-    public Get(settingName: string): any {
+    public get(settingName: string): any {
         const key = settingName.toLowerCase();
         if (this.connectedSettings && this.connectedSettings.hasOwnProperty(key))
             this.settings[key].raw = this.connectedSettings[key];
         return this.settings[key].value;
     }
 
-    public ConnectToWindow(window: any) {
+    public connectToWindow(window: any) {
         if (window.settings) {
             const settingsToConnect: {[key: string]: any} = window.settings;
             for (const key of Object.keys(this.settings))
@@ -188,7 +190,7 @@ export class EnvSettingsProvider implements ISettingsProvider {
         }
     }
 
-    public UseSearchParams(params: URLSearchParams) {
+    public useSearchParams(params: URLSearchParams) {
         for (const key of Object.keys(this.settings)) {
             const val = params.get(key);
             if (val)

@@ -1,9 +1,10 @@
 import { InputMapper } from "./abstractions";
-import { EnvSettingsProvider, GameLoop, GameSettings, ISpriteLibrary, KeyInputBuffer, Logger, NullLogger, SpriteLibrary, Viewport } from "./components";
+import { EnvSettingsProvider, GameLoop, GameSettings, ISpriteLibrary, KeyInputBuffer, Logger, NullLogger, SpriteLibrary, Renderer2D, Renderer3D } from "./components";
+import { PixelArtPipeline } from "./components/graphics";
 import { testgirlSpritesheetMetadata } from "./data";
 import { ImageLoader, sleep } from "./helpers";
 import { ISpritesheet, LinkedSpritesheet, Spritesheet } from "./models";
-import { World } from "./objects";
+import { TestRenderWorld, World } from "./objects";
 
 async function initEngine() {
     const logger = new Logger(document);
@@ -12,15 +13,21 @@ async function initEngine() {
     const searchParams = new URLSearchParams(window.location.search);
     
     const settingsProvider = new EnvSettingsProvider();
-    settingsProvider.ConnectToWindow(window);
-    settingsProvider.UseSearchParams(searchParams);
+    settingsProvider.connectToWindow(window);
+    settingsProvider.useSearchParams(searchParams);
     
     const gameSettings = new GameSettings(settingsProvider);
     
     const gameLoop = new GameLoop(window, gameSettings);
 
-    const viewport = new Viewport(document, window);
-    gameLoop.setRenderer(viewport);
+    // const renderer2d = new Renderer2D(document, window);
+    // gameLoop.setRenderer2d(renderer2d);
+
+    const renderPipeline = new PixelArtPipeline(gameSettings);
+    await renderPipeline.init(document);
+
+    const renderer3d = new Renderer3D(document, window, renderPipeline);
+    gameLoop.setRenderer3d(renderer3d);
 
     const keyboardBuffer = new KeyInputBuffer(window, nullLogger);
     gameLoop.addInputBuffer(keyboardBuffer);
@@ -39,13 +46,18 @@ async function initEngine() {
     const spriteLibrary = new SpriteLibrary();
     await loadSpritesheets(spriteLibrary)
 
-    const world = new World(gameSettings, spriteLibrary, logger);
-    gameLoop.addUpdateable(world);
-    gameLoop.addDrawable(world);
+    // const world = new World(gameSettings, spriteLibrary, logger);
+    // gameLoop.addUpdateable(world);
+    // gameLoop.addDrawable(world);
+
+    const testRenderWorld = new TestRenderWorld(gameSettings);
+    await testRenderWorld.init(document, ['inkling']);
+    gameLoop.addUpdateable(testRenderWorld);
+    gameLoop.addRenderable(testRenderWorld);
 
     gameLoop.start();
-    await sleep(20000);
-    gameLoop.stop();
+    // await sleep(20000);
+    // gameLoop.stop();
 }
 
 async function loadSpritesheets(spriteLibrary: SpriteLibrary): Promise<void> {

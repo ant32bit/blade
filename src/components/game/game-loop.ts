@@ -1,6 +1,7 @@
 import { IDrawable, IDrawContext } from "../contexts/draw-context";
+import { IRenderable, IRenderContext } from "../contexts/render-context";
 import { IGameSettings } from "./game-settings";
-import { IInputEvent, InputState, IUpdateable, IUpdateContext } from "../contexts/update-context";
+import { InputState, IUpdateable, IUpdateContext } from "../contexts/update-context";
 import { IInputMapper } from "../../abstractions";
 
 export interface IInputBuffer {
@@ -10,8 +11,13 @@ export interface IInputBuffer {
     getState(timestamp: number): InputState;
 }
 
-export interface IRenderer {
+export interface IRenderer2D {
     getDrawContext(): IDrawContext;
+}
+
+export interface IRenderer3D {
+    getRenderContext(): IRenderContext;
+    render(context: IRenderContext);
 }
 
 export interface IIntervalProvider {
@@ -29,8 +35,10 @@ export class GameLoop {
     private _frameFn: (callback: (heartRateTimeStamp: number) => void) => void;
     private _updateables: IUpdateable[] = [];
     private _drawables: IDrawable[] = [];
+    private _renderables: IRenderable[] = [];
     private _inputBuffers: IInputBuffer[] = [];
-    private _renderer: IRenderer = null;
+    private _renderer2d: IRenderer2D = null;
+    private _renderer3d: IRenderer3D = null;
 
     constructor(windowRef: IIntervalProvider, gameSettings: IGameSettings, public inputMapper: IInputMapper = null) {
         if (windowRef.requestAnimationFrame) {
@@ -89,6 +97,10 @@ export class GameLoop {
         this._updateables.push(updateable);
     }
 
+    public addRenderable(renderable: IRenderable) {
+        this._renderables.push(renderable);
+    }
+
     public addDrawable(drawable: IDrawable) {
         this._drawables.push(drawable);
     }
@@ -99,8 +111,12 @@ export class GameLoop {
             buffer.start();
     }
 
-    public setRenderer(renderer: IRenderer) {
-        this._renderer = renderer;
+    public setRenderer2d(renderer2d: IRenderer2D) {
+        this._renderer2d = renderer2d;
+    }
+
+    public setRenderer3d(renderer3d: IRenderer3D) {
+        this._renderer3d = renderer3d;
     }
 
     public start(): void {
@@ -135,12 +151,20 @@ export class GameLoop {
                     updateable.update(updateContext);
                 }
 
-                if (this._renderer) {
-                    const drawContext = this._renderer.getDrawContext();
+                if (this._renderer3d) {
+                    const renderContext = this._renderer3d.getRenderContext();
+                    for (const renderable of this._renderables) {
+                        renderable.render(renderContext);
+                    }
+                    this._renderer3d.render(renderContext);
+                }
+
+                if (this._renderer2d) {
+                    const drawContext = this._renderer2d.getDrawContext();
                     for (const drawable of this._drawables) {
                         drawable.draw(drawContext);
                     }
-                }                
+                }
             }).bind(this))
 
             this._inputBuffers.forEach(buffer => { buffer.start(); });

@@ -2,7 +2,7 @@ import { assert, expect } from "chai";
 import * as sinon from 'sinon';
 import { initDOM } from "../setup";
 import { sleep } from "../../src/helpers";
-import { GameLoop, IDrawable, IDrawContext, IGameSettings, IInputBuffer, InputState, IRenderer, IUpdateable, IUpdateContext } from "../../src/components";
+import { GameLoop, IDrawable, IDrawContext, IGameSettings, IInputBuffer, InputState, IRenderer2D, IUpdateable, IUpdateContext } from "../../src/components";
 
 
 describe("Game Loop", () => {
@@ -12,7 +12,7 @@ describe("Game Loop", () => {
     .forEach(([fps, runLength]) => {
         it(`can run a game loop at ${fps}FPS for ${runLength}ms`, async () => {        
             const expectedCount = Math.round((fps * runLength / 1000) - 1);
-            const gameSettingsMock: IGameSettings = { fps: fps, debug: false }        
+            const gameSettingsMock: IGameSettings = { fps: fps, debug: false, pixelsPerMeter: 10, renderPass: 5 }        
 
             let updateCount = 0;
 
@@ -28,7 +28,7 @@ describe("Game Loop", () => {
     });
 
     it("uses input buffers", async () => {
-        const gameSettingsMock: IGameSettings = { fps: 8, debug: false }
+        const gameSettingsMock: IGameSettings = { fps: 8, debug: false, pixelsPerMeter: 10, renderPass: 5 }
         const fakeState: InputState = {
             Test: [
                 {
@@ -71,7 +71,7 @@ describe("Game Loop", () => {
     });
 
     it("merges input buffers to create an update context", async () => {
-        const gameSettingsMock: IGameSettings = { fps: 8, debug: false }
+        const gameSettingsMock: IGameSettings = { fps: 8, debug: false, pixelsPerMeter: 10, renderPass: 5 }
         const fakeState1: InputState = {
             Test: [
                 {
@@ -149,14 +149,14 @@ describe("Game Loop", () => {
     });
 
     it("uses renderer to create a draw context", async () => {
-        const gameSettingsMock: IGameSettings = { fps: 8, debug: false }
+        const gameSettingsMock: IGameSettings = { fps: 8, debug: false, pixelsPerMeter: 10, renderPass: 5 }
         const fakeDrawContext: IDrawContext = {
             translate: (loc) => loc,
             fill: null,
             drawAnimationFrame: null
         };
         const getDrawContextSpy = sinon.spy(() => fakeDrawContext);
-        const renderer: IRenderer = { getDrawContext: getDrawContextSpy };
+        const renderer: IRenderer2D = { getDrawContext: getDrawContextSpy };
 
         const drawable: IDrawable = {
             draw(ctx: IDrawContext) {
@@ -165,7 +165,7 @@ describe("Game Loop", () => {
         };
         
         const gl = new GameLoop(window, gameSettingsMock);
-        gl.setRenderer(renderer);
+        gl.setRenderer2d(renderer);
         gl.addDrawable(drawable);
         
         gl.start();

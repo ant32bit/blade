@@ -32,9 +32,9 @@ export class TestGirl implements IUpdateable, IDrawable {
                 if (newState.changed)
                     this._setState(newState);
 
-                if (this.state == 'walk') deltaX = 3;
-                if (this.state == 'run') deltaX = 15;
-                deltaX *= this.direction == 'r' ? 1 : -1;
+                if (this.state === 'walk') deltaX = 3;
+                if (this.state === 'run') deltaX = 15;
+                deltaX *= this.direction === 'r' ? 1 : -1;
             }
 
             const prevFrame = this.currFrame;
@@ -60,7 +60,7 @@ export class TestGirl implements IUpdateable, IDrawable {
         this.state = newState.state;
         this.direction = newState.direction;
 
-        const spritesheetName = this.direction == 'r' ? 'testgirl' : 'testgirl-mirror';
+        const spritesheetName = this.direction === 'r' ? 'testgirl' : 'testgirl-mirror';
 
         this.currAnimation = this.spriteLibrary.getAnimation(spritesheetName, this.state);
 
