@@ -46,7 +46,7 @@ export class InputMapper implements IInputMapper {
         const dedupedMappings: string[] = [];
         for (const mapping of sortedMappings) {
             counts[mapping.value.action] -=1;
-            if (counts[mapping.value.action] == 0) {
+            if (counts[mapping.value.action] === 0) {
                 dedupedMappings.push(mapping.value.action);
             }
         }

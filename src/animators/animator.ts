@@ -1,5 +1,5 @@
 export interface IAnimator<T> {
-    next(nTicks: number): T;
+    next(elapsedMs: number): T;
     value(): T;
     finished(): boolean;
     reset(): void;

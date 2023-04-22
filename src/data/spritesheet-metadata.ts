@@ -31,3 +31,16 @@ export const testgirlSpritesheetMetadata: ISpritesheetMetadata = {
         { name: 'hit-wall', duration: 200, nFrames: 2 }
     ]
 };
+
+export const worldBGSpritesheetMetadata: ISpritesheetMetadata = {
+    title: 'world',
+    sprites: {
+        width: 1400,
+        height: 360,
+        centreX: 320,
+        centreY: 350
+    },
+    animations: [
+        { name: 'sanwakai-tower', duration: 1, nFrames: 1 }
+    ]
+};

@@ -1,8 +1,8 @@
 import { InputMapper } from "./abstractions";
-import { EnvSettingsProvider, GameLoop, GameSettings, ISpriteLibrary, KeyInputBuffer, Logger, NullLogger, SpriteLibrary, Viewport } from "./components";
-import { testgirlSpritesheetMetadata } from "./data";
+import { EnvSettingsProvider, GameLoop, GameSettings, KeyInputBuffer, Logger, NullLogger, SpriteLibrary, Viewport } from "./components";
+import { testgirlSpritesheetMetadata, worldBGSpritesheetMetadata } from "./data";
 import { ImageLoader, sleep } from "./helpers";
-import { ISpritesheet, LinkedSpritesheet, Spritesheet } from "./models";
+import { LinkedSpritesheet } from "./models";
 import { World } from "./objects";
 
 async function initEngine() {
@@ -51,18 +51,23 @@ async function initEngine() {
 async function loadSpritesheets(spriteLibrary: SpriteLibrary): Promise<void> {
     const imageLoader = new ImageLoader();
 
-    const originalSpritesheets = [
-        new LinkedSpritesheet(document, imageLoader, testgirlSpritesheetMetadata),
+    type spriteop = { sheet: LinkedSpritesheet, mirror: boolean };
+    const originalSpritesheets: spriteop[] = [
+        { sheet: new LinkedSpritesheet(document, imageLoader, testgirlSpritesheetMetadata), mirror: true },
+        { sheet: new LinkedSpritesheet(document, imageLoader, worldBGSpritesheetMetadata), mirror: false }
     ];
 
-    const loadPromises = originalSpritesheets.map((spritesheet: LinkedSpritesheet) => spritesheet.load());
+    const loadPromises = originalSpritesheets
+        .map((s: spriteop) => s.sheet.load());
     await Promise.all(loadPromises);
 
-    const mirrorPromises = originalSpritesheets.map((spritesheet: LinkedSpritesheet) => spritesheet.createMirror());
+    const mirrorPromises = originalSpritesheets
+        .filter((s: spriteop) => s.mirror)
+        .map((s: spriteop) => s.sheet.createMirror());
     const mirroredSpritesheets = await Promise.all(mirrorPromises);
 
     const addSpritesheet = spriteLibrary.addSpritesheet.bind(spriteLibrary);
-    originalSpritesheets.forEach(addSpritesheet);
+    originalSpritesheets.map((s: spriteop) => s.sheet).forEach(addSpritesheet);
     mirroredSpritesheets.forEach(addSpritesheet);
 }
 

@@ -1,11 +1,15 @@
+import { IPositioned } from "../abstractions";
 import { CountAnimator } from "../animators";
 import { IDrawable, IDrawContext, IGameSettings, ISpriteLibrary, IUpdateable, IUpdateContext, SpriteLibrary } from "../components";
 import { Coords } from "../locators";
 import { IAnimation } from "../models";
 
-export class TestGirl implements IUpdateable, IDrawable {
+const walkRatePxPerMs = 36/1200;
+const runRatePxPerMs = 150/1000;
+
+export class TestGirl implements IUpdateable, IDrawable, IPositioned {
     
-    private position: Coords;
+    private _position: Coords;
     private state: string = 'none';
     private direction: string = 'r';
 
@@ -13,43 +17,43 @@ export class TestGirl implements IUpdateable, IDrawable {
     private currAnimationCounter: CountAnimator;
     private currFrame: number;
 
+    public get position(): Coords { return this._position.move(0, 0); }
+
     constructor(private settings: IGameSettings, private spriteLibrary: ISpriteLibrary) {
-        this.position = new Coords(0, 0);
+        this._position = new Coords(0, 0);
         this._setState(new NewState('none', 'r', []));
     }
 
     update(context: IUpdateContext): void {
-        for(let i = 0; i < context.framesSinceLastUpdate; i++) {
-            this.currAnimationCounter.next(context.framesSinceLastUpdate);
-            let deltaX = 0;
+        this.currAnimationCounter.next(context.elapsedMs);
+        let deltaX = 0;
 
-            if (!this.state.startsWith('attack') || this.currAnimationCounter.finished()) {
-                if(this.currAnimationCounter.finished())
-                    this.state = 'none';
+        if (!this.state.startsWith('attack') || this.currAnimationCounter.finished()) {
+            if(this.currAnimationCounter.finished())
+                this.state = 'none';
 
-                const newState = new NewState(this.state, this.direction, context.state);
+            const newState = new NewState(this.state, this.direction, context.state);
 
-                if (newState.changed)
-                    this._setState(newState);
+            if (newState.changed)
+                this._setState(newState);
 
-                if (this.state == 'walk') deltaX = 3;
-                if (this.state == 'run') deltaX = 15;
-                deltaX *= this.direction == 'r' ? 1 : -1;
-            }
-
-            const prevFrame = this.currFrame;
-            this.currFrame = Math.floor(this.currAnimationCounter.value());
-
-            let frameDelta = this.currFrame - prevFrame;
-            if (prevFrame > this.currFrame) 
-                frameDelta += this.currAnimation.frames.length;
-
-            this.position = this.position.move(deltaX * frameDelta, 0);
+            if (this.state === 'walk') deltaX = walkRatePxPerMs * context.elapsedMs;
+            if (this.state === 'run') deltaX = runRatePxPerMs * context.elapsedMs;
+            deltaX *= this.direction === 'r' ? 1 : -1;
         }
+
+        const prevFrame = this.currFrame;
+        this.currFrame = Math.floor(this.currAnimationCounter.value());
+
+        let frameDelta = this.currFrame - prevFrame;
+        if (prevFrame > this.currFrame) 
+            frameDelta += this.currAnimation.frames.length;
+
+        this._position = this._position.move(deltaX * frameDelta, 0);
     }
 
     draw(context: IDrawContext): void {
-        const screenCoords = context.translate(this.position);
+        const screenCoords = context.translate(this._position);
         context.drawAnimationFrame(screenCoords, this.currAnimation, this.currFrame);
     }
 
@@ -60,15 +64,13 @@ export class TestGirl implements IUpdateable, IDrawable {
         this.state = newState.state;
         this.direction = newState.direction;
 
-        const spritesheetName = this.direction == 'r' ? 'testgirl' : 'testgirl-mirror';
+        const spritesheetName = this.direction === 'r' ? 'testgirl' : 'testgirl-mirror';
 
         this.currAnimation = this.spriteLibrary.getAnimation(spritesheetName, this.state);
 
         const length = this.currAnimation.frames.length;
 
-        const step = (length * 1000) / (this.currAnimation.duration * this.settings.fps);
-
-        this.currAnimationCounter = new CountAnimator(0, length, step, !this.state.startsWith('attack'));
+        this.currAnimationCounter = new CountAnimator(0, length, this.currAnimation.duration, !this.state.startsWith('attack'));
         this.currFrame = 0;
     }
 }

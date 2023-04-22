@@ -36,7 +36,7 @@ export class LinkedSpritesheet implements ISpritesheet {
         let href: string;
         const links = elementProvider.getElementsByTagName('link');
         for (const link of links) {
-            if (link.rel == 'spritesheet' && link.title == this.metadata.title)
+            if (link.rel === 'spritesheet' && link.title === this.metadata.title)
             {
                 href = link.href;
                 break;

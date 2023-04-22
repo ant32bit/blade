@@ -24,7 +24,7 @@ export class GameLoop {
 
     private _frameThreshold: number;
     private _lastFrameHeartRate: number;
-    private _lastTotalFramesUpdate: number;
+    private _cumulativeDuration: number;
     private _stopped: boolean = true;
     private _frameFn: (callback: (heartRateTimeStamp: number) => void) => void;
     private _updateables: IUpdateable[] = [];
@@ -32,19 +32,21 @@ export class GameLoop {
     private _inputBuffers: IInputBuffer[] = [];
     private _renderer: IRenderer = null;
 
-    constructor(windowRef: IIntervalProvider, gameSettings: IGameSettings, public inputMapper: IInputMapper = null) {
+    constructor(windowRef: IIntervalProvider, private gameSettings: IGameSettings, public inputMapper: IInputMapper = null) {
         if (windowRef.requestAnimationFrame) {
-            this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
+            this._frameFn = (callback: (elapsedMs: number) => void) => {
                 const _doFrame = (heartRateTimeStamp: number) => {
                     const frameSpan = 1000 / gameSettings.fps;
                     if (this._lastFrameHeartRate < 0) {
                         this._frameThreshold = frameSpan;
                         this._lastFrameHeartRate = heartRateTimeStamp;
+                        this._cumulativeDuration = heartRateTimeStamp;
                     }
                     if (heartRateTimeStamp - this._frameThreshold >= 0) {
-                        this._lastTotalFramesUpdate = (heartRateTimeStamp - this._lastFrameHeartRate) / frameSpan;
+                        const elapsedMs = heartRateTimeStamp - this._cumulativeDuration;
+                        this._cumulativeDuration += elapsedMs;
                         this._frameThreshold += frameSpan;
-                        callback(heartRateTimeStamp);
+                        callback(elapsedMs);
                         this._lastFrameHeartRate = heartRateTimeStamp;
                     }
                     if (!this._stopped)
@@ -55,7 +57,7 @@ export class GameLoop {
                     windowRef.requestAnimationFrame(_doFrame);
             }
         } else {
-            this._frameFn = (callback: (heartRateTimeStamp: number) => void) => {
+            this._frameFn = (callback: (elapsedMs: number) => void) => {
                 let fps = -1;
                 let h_interval = 0;
                 let intervalFn = () => {
@@ -74,10 +76,15 @@ export class GameLoop {
                         return;
                     }
 
-                    this._lastFrameHeartRate = Date.now();
+                    const now = Date.now();
+                    if (this._lastFrameHeartRate < 0) {
+                        this._lastFrameHeartRate = now;
+                    }
+                    const elapsedMs = now - this._lastFrameHeartRate;
+                    this._lastFrameHeartRate += elapsedMs; 
                     this._frameThreshold += 1000 / gameSettings.fps;
 
-                    callback(this._lastFrameHeartRate);
+                    callback(elapsedMs);
                 };
 
                 intervalFn();
@@ -109,17 +116,18 @@ export class GameLoop {
             this._lastFrameHeartRate = -1;
             this._frameThreshold = -1;
             
-            this._frameFn(((hrts: number) => {
+            this._frameFn(((elapsedMs: number) => {
                 const updateContext: IUpdateContext = {
                     inputs: {},
                     state: [],
-                    framesSinceLastUpdate: Math.round(this._lastTotalFramesUpdate),
+                    fps: this.gameSettings.fps,
+                    elapsedMs,
                     lastUpdateTime: this._lastFrameHeartRate,
-                    currUpdateTime: hrts
+                    currUpdateTime: this._lastFrameHeartRate + elapsedMs
                 }
 
                 for (const buffer of this._inputBuffers) {
-                    const state = buffer.getState(hrts);
+                    const state = buffer.getState(updateContext.currUpdateTime);
                     for (const key of Object.keys(state)) {
                         if (!updateContext.inputs[key])
                             updateContext.inputs[key] = [];

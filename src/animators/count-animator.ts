@@ -2,32 +2,30 @@ import { IAnimator } from "./animator";
 
 export class CountAnimator implements IAnimator<number> {
 
-    private range: number;
-    private ticks: number;
     private curr: number;
+    private stepsPerMs: number;
+    private runTimeMs: number;
     private ended: boolean;
 
-    constructor(private min: number, max: number, private step: number, private loop: boolean = false) {
-        this.range = max - min;
+    constructor(private min: number, max: number, private durationMs: number, private loop: boolean = false) {
+        this.stepsPerMs = (max - min) / durationMs;
         this.reset();
     }
 
-    public next(nTicks: number): number {
+    public next(elpasedMs: number): number {
         if (this.ended)
             return this.value();
         
-        this.ticks += nTicks;
-        this.curr = (this.ticks * this.step);
-        if (this.curr >= this.range) {
-            if (this.loop) {
-                let overflow = this.range;
-                while(overflow <= this.curr) overflow += this.range;
-                overflow -= this.range;
-                this.curr -= overflow;
-            } else {
-                this.curr = 0;
-                this.ended = true;
-            }
+        this.runTimeMs = this.runTimeMs + elpasedMs;
+        if(this.loop) {
+            this.curr = (this.runTimeMs % this.durationMs) * this.stepsPerMs;
+        }
+        else if (this.runTimeMs >= this.durationMs) {
+            this.ended = true;
+            this.curr = this.durationMs * this.stepsPerMs;
+        }
+        else {
+            this.curr = this.runTimeMs * this.stepsPerMs;
         }
             
         return this.value();
@@ -43,7 +41,7 @@ export class CountAnimator implements IAnimator<number> {
     
     public reset(): void {
         this.curr = 0;
-        this.ticks = 0;
+        this.runTimeMs = 0;
         this.ended = false;
     } 
 }

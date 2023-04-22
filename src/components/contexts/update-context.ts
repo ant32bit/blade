@@ -2,7 +2,8 @@
 export interface IUpdateContext {
     inputs: InputState;
     state: string[];
-    framesSinceLastUpdate: number;
+    fps: number;
+    elapsedMs: number;
     lastUpdateTime: number;
     currUpdateTime: number;
 }
